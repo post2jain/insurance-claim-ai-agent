@@ -1,7 +1,145 @@
-# Insurance Claims Processing Platform - Architecture Documentation
+# Insurance Claims Processing Platform Architecture
 
-## Overview
-The Insurance Claims Processing Platform is a modern API-based system that handles insurance claims processing with AI-powered suggestions and video analysis capabilities. This document provides a comprehensive guide to the system's architecture, data flow, and key components.
+## System Overview
+
+The Insurance Claims Processing Platform is a modern, scalable application built using FastAPI and following clean architecture principles. The system processes insurance claims, generates AI-powered suggestions, and handles video analysis for claims assessment.
+
+## Architecture Layers
+
+### 1. API Layer
+- **FastAPI Application**: Main application entry point
+- **API Routes**: Organized by domain (claims, suggestions)
+- **Dependency Injection**: Centralized dependency management
+- **Request/Response Models**: Pydantic models for data validation
+
+### 2. Service Layer
+- **ClaimsService**: Business logic for claims processing
+- **SuggestionsService**: AI suggestion management
+- **AIService**: OpenAI integration for analysis
+- **VideoService**: Video processing and analysis
+
+### 3. Repository Layer
+- **BaseRepository**: Generic CRUD operations
+- **ClaimRepository**: Claims data access
+- **SuggestionRepository**: Suggestions data access
+
+### 4. Data Layer
+- **SQLAlchemy Models**: Database schema definitions
+- **Database Session**: Connection management
+- **Migrations**: Schema version control
+
+## Key Components
+
+### Repository Pattern
+The application implements the Repository Pattern to abstract database operations:
+
+```python
+class BaseRepository(Generic[ModelType]):
+    def __init__(self, model: Type[ModelType], db: Session):
+        self.model = model
+        self.db = db
+    
+    def get(self, id: UUID) -> Optional[ModelType]
+    def get_all(self, skip: int = 0, limit: int = 100) -> List[ModelType]
+    def create(self, obj_in: dict) -> ModelType
+    def update(self, id: UUID, obj_in: dict) -> Optional[ModelType]
+    def delete(self, id: UUID) -> bool
+    def exists(self, id: UUID) -> bool
+```
+
+Domain-specific repositories extend the base repository:
+- `ClaimRepository`: Claims-specific queries and operations
+- `SuggestionRepository`: Suggestion-specific queries and operations
+
+### Dependency Injection
+The application uses FastAPI's dependency injection system:
+
+```python
+def get_db() -> Generator[Session, None, None]
+def get_claim_repository(db: Session = Depends(get_db)) -> ClaimRepository
+def get_suggestion_repository(db: Session = Depends(get_db)) -> SuggestionRepository
+def get_claims_service(...) -> ClaimsService
+def get_suggestions_service(...) -> SuggestionsService
+```
+
+### Service Layer
+Services encapsulate business logic and use repositories for data access:
+
+```python
+class ClaimsService:
+    def __init__(
+        self,
+        claim_repository: ClaimRepository,
+        ai_service: AIService,
+        video_service: VideoService
+    ):
+        self.claim_repository = claim_repository
+        self.ai_service = ai_service
+        self.video_service = video_service
+```
+
+### API Routes
+Routes are organized by domain and use dependency injection:
+
+```python
+@router.post("/", response_model=Claim)
+async def create_claim(
+    claim: ClaimCreate,
+    claims_service: ClaimsService = Depends(get_claims_service)
+) -> Claim:
+    return claims_service.create_claim(claim)
+```
+
+## Data Flow
+
+1. **Request Handling**:
+   - Client sends request to API endpoint
+   - FastAPI validates request data using Pydantic models
+   - Dependencies are injected (services, repositories)
+
+2. **Business Logic**:
+   - Service layer processes request
+   - Business rules are applied
+   - External services are called (AI, video processing)
+
+3. **Data Access**:
+   - Repository layer handles database operations
+   - Transactions are managed
+   - Data is mapped to domain models
+
+4. **Response**:
+   - Data is validated using Pydantic models
+   - Response is serialized and returned
+
+## Error Handling
+
+The application implements consistent error handling:
+- HTTP exceptions for API errors
+- Repository-level error handling
+- Service-level business logic validation
+- Global exception handlers
+
+## Security
+
+- Input validation using Pydantic models
+- Database query parameterization
+- Secure file handling for video uploads
+- API key management for external services
+
+## Testing
+
+The architecture supports multiple testing levels:
+- Unit tests for repositories and services
+- Integration tests for API endpoints
+- End-to-end tests for complete workflows
+
+## Deployment
+
+The application is containerized and can be deployed:
+- Docker containerization
+- Environment configuration
+- Database migrations
+- Health checks and monitoring
 
 ## System Architecture
 
