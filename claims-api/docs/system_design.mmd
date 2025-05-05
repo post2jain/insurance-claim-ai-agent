@@ -1,0 +1,95 @@
+graph TB
+    subgraph Client Layer
+        A[Web Client]
+        B[Mobile App]
+        C[Third-party Integration]
+    end
+
+    subgraph API Gateway
+        D[Load Balancer]
+        E[API Gateway]
+        F[Rate Limiter]
+    end
+
+    subgraph Application Layer
+        G[Claims API]
+        H[Suggestions API]
+        I[Video Processing API]
+    end
+
+    subgraph Service Layer
+        J[Claim Service]
+        K[AI Service]
+        L[Video Service]
+        M[Storage Service]
+    end
+
+    subgraph External Services
+        N[OpenAI API]
+        O[Cloud Storage]
+        P[Email Service]
+    end
+
+    subgraph Data Layer
+        Q[(PostgreSQL DB)]
+        R[(Redis Cache)]
+    end
+
+    %% Client to API Gateway connections
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    E --> F
+
+    %% API Gateway to Application Layer
+    F --> G
+    F --> H
+    F --> I
+
+    %% Application Layer to Service Layer
+    G --> J
+    H --> K
+    I --> L
+    G --> M
+    H --> M
+    I --> M
+
+    %% Service Layer to External Services
+    K --> N
+    L --> N
+    M --> O
+    J --> P
+
+    %% Service Layer to Data Layer
+    J --> Q
+    K --> Q
+    L --> Q
+    J --> R
+    K --> R
+
+    %% Styling
+    classDef client fill:#f9f,stroke:#333,stroke-width:2px
+    classDef gateway fill:#bbf,stroke:#333,stroke-width:2px
+    classDef api fill:#bfb,stroke:#333,stroke-width:2px
+    classDef service fill:#fbb,stroke:#333,stroke-width:2px
+    classDef external fill:#fbf,stroke:#333,stroke-width:2px
+    classDef database fill:#bff,stroke:#333,stroke-width:2px
+
+    class A,B,C client
+    class D,E,F gateway
+    class G,H,I api
+    class J,K,L,M service
+    class N,O,P external
+    class Q,R database
+
+    %% Legend
+    subgraph Legend
+        direction TB
+        L1[Client Layer]:::client
+        L2[API Gateway]:::gateway
+        L3[Application Layer]:::api
+        L4[Service Layer]:::service
+        L5[External Services]:::external
+        L6[Data Layer]:::database
+    end 
